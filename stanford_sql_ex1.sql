@@ -84,10 +84,10 @@ FROM
     FROM Rating R1
     JOIN Rating R2
         ON R1.rID = R2.rID
-    WHERE 
-    R1.mID = R2.mID AND R1.rID = R2.rID 
-    AND R1.stars < R2.stars 
-    AND R1.ratingDate < R2.ratingDate) Z
+    WHERE   R1.mID = R2.mID 
+        AND R1.rID = R2.rID 
+        AND R1.stars < R2.stars 
+        AND R1.ratingDate < R2.ratingDate) Z
 JOIN Movie M
     ON Z.mID = M.mID
 JOIN Reviewer R
@@ -97,7 +97,7 @@ JOIN Reviewer R
 For each movie that has at least one rating, find the highest number of stars that movie received. Return the movie title and number of stars. Sort by movie title. 
 */
 SELECT title, MAX(stars)
-FROM Movie M
+FROM Movie M 
 JOIN Rating R1
     ON M.mID = R1.mID
 WHERE rID IS NOT NULL
