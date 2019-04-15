@@ -123,14 +123,14 @@ SELECT
         (SELECT title, year, AVG(stars) Avg1
         FROM Movie M
         JOIN Rating R1 ON M.mID = R1.mID
-        GROUP BY title) 
+        GROUP BY title) AS DIFF1
     WHERE year <1980)
     -
     (SELECT AVG(Avg2)
-    FROM 
+    FROM
         (SELECT title, year, AVG(stars) Avg2
         FROM Movie M
         JOIN Rating R1 ON M.mID = R1.mID
-        GROUP BY title)
+        GROUP BY title) AS DIFF2
     WHERE year >1980);
 
