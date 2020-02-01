@@ -25,22 +25,29 @@ Important Notes:
 You may perform these exercises as many times as you like, so we strongly encourage you to keep working with them until you complete the exercises with full credit.
 */
 
+
 /* 
 Find the titles of all movies directed by Steven Spielberg. 
 */
 SELECT title
 FROM Movie
 WHERE director = 'Steven Spielberg';
+-- OR
+SELECT title
+FROM Movie
+WHERE director LIKE '%Spielberg%';
+
 
 /* 
 Find all years that have a movie that received a rating of 4 or 5, and sort them in increasing order. 
 */
-SELECT DISTINCT year
+SELECT DISTINCT M.year
 FROM Movie M
 JOIN Rating R
     ON M.mID = R.mID
 WHERE stars IN (4, 5)            
 ORDER BY year;
+
 
 /* 
 Find the titles of all movies that have no ratings. 
@@ -51,28 +58,44 @@ WHERE NOT EXISTS
     (SELECT R.mID
      FROM Rating R
      WHERE R.mID = M.mID);
-     
+-- OR
+SELECT title
+FROM Movie
+WHERE mID NOT IN (
+                SELECT mID
+                FROM Rating
+                );
+
 
 /* 
 Some reviewers didn't provide a date with their rating. Find the names of all reviewers who have ratings with a NULL value for the date.
-
 */
 SELECT name
 FROM Reviewer R1
 JOIN Rating R2
     ON R1.rID = R2.rID
 WHERE ratingDate IS NULL;
+--OR
+SELECT name
+FROM Reviewer
+WHERE rID in (
+                SELECT rID
+                FROM Rating
+                WHERE ratingDate IS NULL
+                );
+
 
 /* 
 Write a query to return the ratings data in a more readable format: reviewer name, movie title, stars, and ratingDate. Also, sort the data, first by reviewer name, then by movie title, and lastly by number of stars. 
 */
-SELECT name, title, stars, ratingDate
+
+SELECT R2.name, M.title, R1.stars, R1.ratingDate
 FROM Movie M
 JOIN Rating R1
     ON M.mID = R1.mID
 JOIN Reviewer R2
-    ON R2.rID = R1.rID
-ORDER BY name, title, stars;
+    ON R1.rID = R2.rID
+ORDER BY R2.name, M.title, R1.stars;
 
 
 /* 
@@ -84,24 +107,37 @@ FROM
     FROM Rating R1
     JOIN Rating R2
         ON R1.rID = R2.rID
-    WHERE   R1.mID = R2.mID 
-        AND R1.rID = R2.rID 
-        AND R1.stars < R2.stars 
-        AND R1.ratingDate < R2.ratingDate) Z
+    WHERE R1.mID = R2.mID
+    AND R1.rID = R2.rID
+    AND R1.stars < R2.stars
+    AND R1.ratingDate < R2.ratingDate) Z
 JOIN Movie M
     ON Z.mID = M.mID
 JOIN Reviewer R
     ON R.rID = Z.rID;
+-- OR
+SELECT R1.name, M.title
+FROM Reviewer R1
+JOIN Rating R2
+    ON R1.rID = R2.rID
+JOIN Rating R3
+    ON R1.rID = R3.rID
+JOIN Movie M
+    ON R2.mID = M.mID
+WHERE R2.mID = R3.mID
+AND R2.ratingDate > R3.ratingDate
+AND R2.stars > R3.stars;
 
 /* 
 For each movie that has at least one rating, find the highest number of stars that movie received. Return the movie title and number of stars. Sort by movie title. 
 */
-SELECT title, MAX(stars)
-FROM Movie M 
-JOIN Rating R1
-    ON M.mID = R1.mID
-WHERE rID IS NOT NULL
-GROUP BY title;
+SELECT M.title, MAX(R.stars)
+FROM Movie M
+JOIN Rating R
+    ON M.mID = R.mID
+GROUP BY M.title
+ORDER BY M.title
+
 
 /* 
 For each movie, return the title and the 'rating spread', that is, the difference between highest and lowest ratings given to that movie. Sort by rating spread from highest to lowest, then by movie title. 
@@ -112,7 +148,13 @@ JOIN Rating R1
     ON M.mID = R1.mID
 GROUP BY title
 ORDER BY RatingSpread DESC;
-
+-- OR
+SELECT M.title, (MAX(R.stars) - MIN(R.stars))
+FROM Movie M
+JOIN Rating R
+    ON M.mID = R.mID
+GROUP BY M.title
+ORDER BY 2 DESC;
 
 /* 
 Find the difference between the average rating of movies released before 1980 and the average rating of movies released after 1980. (Make sure to calculate the average rating for each movie, then the average of those averages for movies before 1980 and movies after. Don't just calculate the overall average rating before and after 1980.) 
@@ -123,7 +165,7 @@ SELECT
         (SELECT title, year, AVG(stars) Avg1
         FROM Movie M
         JOIN Rating R1 ON M.mID = R1.mID
-        GROUP BY title) AS DIFF1
+        GROUP BY title) DIFF1
     WHERE year <1980)
     -
     (SELECT AVG(Avg2)
@@ -131,6 +173,26 @@ SELECT
         (SELECT title, year, AVG(stars) Avg2
         FROM Movie M
         JOIN Rating R1 ON M.mID = R1.mID
-        GROUP BY title) AS DIFF2
+        GROUP BY title) DIFF2
     WHERE year >1980);
-
+-- OR
+SELECT
+    (SELECT AVG(AvgStars)
+    FROM
+        (SELECT AVG(R.stars) AvgStars
+        FROM Rating R
+        JOIN Movie M
+            ON M.mID = R.mID
+        WHERE M.year < 1980
+        GROUP BY M.mID)
+        DIFF1)
+-
+    (SELECT AVG(AvgStars)
+    FROM
+        (SELECT AVG(R.stars) AvgStars
+        FROM Rating R
+        JOIN Movie M
+            ON M.mID = R.mID
+        WHERE M.year > 1980
+        GROUP BY M.mID)
+        DIFF2);
