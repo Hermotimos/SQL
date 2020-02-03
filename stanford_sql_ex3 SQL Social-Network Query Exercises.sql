@@ -166,25 +166,22 @@ WHERE L.ID2 NOT IN (
                 FROM Likes
                 );
 
--- TODO continue from here
+
+
 
 /* 6 
 Find names and grades of students who only have friends in the same grade. Return the result sorted by grade, then by name within each grade.
 */
-SELECT  H1.name, H1.grade
-FROM Friend F
-JOIN Highschooler H1
-    ON F.ID1 = H1.ID
-JOIN Highschooler H2
-    ON F.ID2 = H2.ID
+SELECT H1.name, H1.grade
+FROM Highschooler H1, Highschooler H2
+JOIN Friend F
+    ON F.ID1 = H1.ID AND F.ID2 = H2.ID
 WHERE H1.grade = H2.grade
-                            EXCEPT
-SELECT  H1.name, H1.grade
-FROM Friend F
-JOIN Highschooler H1
-    ON F.ID1 = H1.ID
-JOIN Highschooler H2
-    ON F.ID2 = H2.ID
+EXCEPT
+SELECT H1.name, H1.grade
+FROM Highschooler H1, Highschooler H2
+JOIN Friend F
+    ON F.ID1 = H1.ID AND F.ID2 = H2.ID
 WHERE H1.grade <> H2.grade
 ORDER BY H1.grade, H1.name;
 
@@ -234,3 +231,12 @@ FROM (SELECT ID2, COUNT(ID2)
             HAVING COUNT(ID2) >1) S
 JOIN Highschooler H
    ON H.ID = S.ID2;
+
+SELECT name, grade
+FROM Highschooler
+WHERE ID IN (
+                SELECT ID2
+                FROM Likes
+                GROUP BY ID2
+                HAVING COUNT(*) > 1
+                );
