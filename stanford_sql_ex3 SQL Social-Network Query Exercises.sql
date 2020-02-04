@@ -68,6 +68,14 @@ WHERE ID IN (
             WHERE H.name = 'Gabriel'
             );
 
+SELECT H1.name
+FROM Highschooler H1
+JOIN Highschooler H2
+    ON H1.ID <> H2.ID
+JOIN Friend F
+    ON H1.ID = F.ID1
+AND H2.ID = F.ID2
+WHERE H2.name = 'Gabriel';
 
 
 
@@ -88,6 +96,12 @@ JOIN Likes F
     ON F.ID1 = H1.ID AND F.ID2 = H2.ID
 WHERE H1.grade >= H2.grade + 2;
 
+SELECT H1.name, H1.grade, H2.name, H2.grade
+FROM Highschooler H1
+JOIN Highschooler H2
+    ON H1.grade >= H2.grade + 2
+JOIN Likes L
+    ON H1.ID = L.ID1 AND H2.ID = L.ID2;
 
 
 
@@ -100,13 +114,12 @@ JOIN Highschooler H1
 	ON L2.ID1 = H1.ID
 JOIN Highschooler H2
 	ON L2.ID2 = H2.ID
-WHERE EXISTS
-	(SELECT *
-	FROM Likes L1
-	WHERE L1.ID1 = L2.ID2 AND L1.ID2 = L2.ID1)
-AND H1.name < H2.name
-GROUP BY L2.ID2 + L2.ID1
-ORDER by H1.name;
+WHERE H1.name < H2.name
+AND EXISTS (
+            SELECT *
+            FROM Likes L1
+            WHERE L1.ID1 = L2.ID2 AND L1.ID2 = L2.ID1
+            );
 
 
 SELECT H1.name, H1.grade, H2.name, H2.grade
@@ -124,8 +137,7 @@ AND EXISTS (
 SELECT H1.name, H1.grade, H2.name, H2.grade
 FROM Likes L1
 JOIN Likes L2
-    ON L1.ID1 = L2.ID2
-    AND L1.ID2 = L2.ID1
+    ON L1.ID1 = L2.ID2 AND L1.ID2 = L2.ID1
 JOIN Highschooler H1
     ON L1.ID1 = H1.ID
 JOIN Highschooler H2
@@ -186,11 +198,49 @@ WHERE H1.grade <> H2.grade
 ORDER BY H1.grade, H1.name;
 
 
+SELECT HH.name, HH.grade
+FROM Highschooler HH
+WHERE NOT EXISTS (
+                    SELECT *
+                    FROM Friend F
+                    JOIN Highschooler H1
+                        ON F.ID1 = H1.ID
+                    JOIN Highschooler H2
+                        ON F.ID2 = H2.ID
+                    WHERE H1.grade <> H2.grade
+                    AND H1.ID = HH.ID
+                    )
+ORDER BY HH.grade, HH.name;
 
 
 /* 7 
 For each student A who likes a student B where the two are not friends, find if they have a friend C in common (who can introduce them!). For all such trios, return the name and grade of A, B, and C. 
 */
+-- New solution:
+SELECT DISTINCT H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
+FROM Highschooler H1, Highschooler H2, Highschooler H3
+-- Select only those H1 and H2 that H1 likes H2 (A likes B)
+JOIN Likes L
+    ON H1.ID = L.ID1 AND H2.ID = L.ID2
+-- Select only thise H3 who are common friends of H1 and H2
+WHERE H3.ID IN (
+                -- Find common friends of A and B (H1.ID = A, H2.ID = B)
+                SELECT F.ID2
+                FROM Friend F
+                WHERE F.ID1 = H1.ID
+                INTERSECT
+                SELECT F.ID2
+                FROM Friend F
+                WHERE F.ID1 = H2.ID
+                )
+AND NOT EXISTS (
+                -- Ensure A and B are not friends (H1.ID = A, H2.ID = B)
+                SELECT *
+                FROM Friend FF
+                WHERE H1.ID = FF.ID1 AND H2.ID = FF.ID2
+                );
+
+-- The older solution, which I no more understand:
 SELECT H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
 FROM Likes L
 JOIN Highschooler H1             
@@ -232,6 +282,7 @@ FROM (SELECT ID2, COUNT(ID2)
 JOIN Highschooler H
    ON H.ID = S.ID2;
 
+
 SELECT name, grade
 FROM Highschooler
 WHERE ID IN (
@@ -240,3 +291,12 @@ WHERE ID IN (
                 GROUP BY ID2
                 HAVING COUNT(*) > 1
                 );
+
+
+SELECT H.name, H.grade
+FROM Highschooler H
+JOIN Likes L
+    ON H.ID = L.ID2
+GROUP BY L.ID2
+HAVING COUNT(L.ID2) > 1;
+
