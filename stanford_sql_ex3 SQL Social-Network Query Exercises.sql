@@ -213,11 +213,13 @@ WHERE NOT EXISTS (
 ORDER BY HH.grade, HH.name;
 
 
+
+
 /* 7 
 For each student A who likes a student B where the two are not friends, find if they have a friend C in common (who can introduce them!). For all such trios, return the name and grade of A, B, and C. 
 */
 -- New solution:
-SELECT DISTINCT H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
+SELECT H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
 FROM Highschooler H1, Highschooler H2, Highschooler H3
 -- Select only those H1 and H2 that H1 likes H2 (A likes B)
 JOIN Likes L
@@ -240,19 +242,35 @@ AND NOT EXISTS (
                 WHERE H1.ID = FF.ID1 AND H2.ID = FF.ID2
                 );
 
+
+SELECT H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
+FROM Likes L
+JOIN Friend F ON L.ID1 = F.ID1
+JOIN Highschooler H1 ON L.ID1 = H1.ID
+JOIN Highschooler H2 ON L.ID2 = H2.ID
+JOIN Highschooler H3 ON F.ID2 = H3.ID
+WHERE NOT EXISTS
+                (SELECT FF.ID1, FF.ID2
+                FROM Friend FF
+                WHERE L.ID1 = FF.ID1 AND L.ID2 = FF.ID2)
+AND F.ID2 IN
+                (SELECT FFF.ID2
+                FROM Friend FFF
+                WHERE FFF.ID1 = L.ID1)
+AND F.ID2 IN
+                (SELECT FFF.ID2
+                FROM Friend FFF
+                WHERE FFF.ID1 = L.ID2);
+
+
 -- The older solution, which I no more understand:
 SELECT H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
 FROM Likes L
-JOIN Highschooler H1             
-    ON H1.ID = L.ID1            
-JOIN Highschooler H2            
-    ON H2.ID = L.ID2
-JOIN Friend F1
-    ON L.ID1 = F1.ID1
-JOIN Friend F2
-    ON L.ID2 = F2.ID1
-JOIN Highschooler H3
-    ON H3.ID = F2.ID2
+JOIN Highschooler H1  ON H1.ID = L.ID1
+JOIN Highschooler H2  ON H2.ID = L.ID2
+JOIN Friend F1 ON L.ID1 = F1.ID1
+JOIN Friend F2 ON L.ID2 = F2.ID1
+JOIN Highschooler H3 ON H3.ID = F2.ID2
 WHERE L.ID1 NOT IN    
                     (SELECT FF.ID1
                     FROM Friend FF
