@@ -66,25 +66,34 @@ Find those students for whom all of their friends are in different grades from t
 SELECT H.name, H.grade
 FROM Highschooler H
 WHERE H.grade NOT IN
-                (SELECT H2.grade
+                (SELECT H1.grade
                 FROM Friend F
                 JOIN Highschooler H1
-                    ON F.ID1 = H1.ID
-                JOIN Highschooler H2
-                    ON F.ID2 = H2.ID
+                    ON F.ID2 = H1.ID
                 WHERE H.ID = F.ID1);
 
 
+SELECT H.name, H.grade
+FROM Highschooler H
+WHERE NOT EXISTS (
+                SELECT *
+                FROM Highschooler HH
+                JOIN Friend FF
+                    ON HH.ID = FF.ID2
+                WHERE H.ID = FF.ID1
+                AND HH.grade = H.grade
+                );
 
 
 /* 3 
 What is the average number of friends per student? (Your result should be just one number.) 
 */
 SELECT AVG(Cnt)
-FROM 
-    (SELECT COUNT(ID2) AS Cnt
+FROM (
+    SELECT COUNT(ID2) Cnt
     FROM Friend
-    GROUP BY ID1);
+    GROUP BY ID1
+    );
 
 
 
@@ -92,22 +101,24 @@ FROM
 /* 4 
 Find the number of students who are either friends with Cassandra or are friends of friends of Cassandra. Do not count Cassandra, even though technically she is a friend of a friend. 
 */
-SELECT
-(SELECT COUNT(ID2)
-FROM Friend F
-JOIN Highschooler H
-    ON F.ID1 = H.ID
-WHERE H.name = 'Cassandra')
-+
-(SELECT COUNT(F2.ID2)
-FROM Friend F1
-JOIN Friend F2
-    ON F1.ID2 = F2.ID1
-    AND F1.ID1 <> F2.ID2
-JOIN Highschooler H
-    ON F1.ID1 = H.ID
-WHERE H.name = 'Cassandra');
-
+ SELECT (
+        SELECT COUNT(F.ID2)
+        FROM Friend F
+        JOIN Highschooler H
+            ON H.ID = F.ID1
+        WHERE H.name = 'Cassandra'
+        )
+    +
+        (
+        SELECT COUNT(F2.ID2)
+        FROM Friend F1
+        JOIN Friend F2
+            ON F1.ID2 = F2.ID1
+            AND F1.ID1 <> F2.ID2
+        JOIN Highschooler H
+            ON F1.ID1 = H.ID
+        WHERE H.name = 'Cassandra'
+        );
 
 
 
