@@ -18,10 +18,14 @@ English: The reviewer rID gave the movie mID a number of stars rating (1-5) on a
 Your modifications will run over a small data set conforming to the schema. View the database.
 (You can also download the schema and data.)
 
-Instructions: You are to write each of the following data modification commands using SQL.
+Instructions:
+You are to write each of the following data modification commands using SQL.
 Our back-end runs each modification using SQLite on the original state of the sample database.
 It then performs a query over the modified database to check whether your command made the correct modification,
-and restores the database to its original state. */
+and restores the database to its original state.
+
+You may perform these exercises as many times as you like, so we strongly encourage you to keep working with them until you complete the exercises with full credit.
+ */
 
 
 /* 1 
@@ -64,3 +68,13 @@ WHERE mID IN (
             WHERE year < 1970 OR year > 2000
             )
 AND stars < 4;
+
+
+DELETE
+FROM Rating
+WHERE mID IN (
+            SELECT mID
+            FROM Movie
+            WHERE year NOT BETWEEN 1970 AND 2000
+            )
+AND stars <4;
