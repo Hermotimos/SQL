@@ -58,7 +58,7 @@ AND NOT EXISTS (
                 SELECT *
                 FROM Likes LL
                 WHERE LL.ID1 = Likes.ID2 AND LL.ID2 = Likes.ID1
-                )
+                );
 
 
 -- OLDER SOLUTIONS WHICH ARE FAR TOO LONG AND UNNECESSARILY COMPLICATED AND STILL USE LINKED SUBQUERIES:
